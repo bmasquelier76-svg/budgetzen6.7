@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Mon Budget Zen</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
+    <link rel="icon" type="image/png" href="icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Sanctuarium">
+    <meta name="theme-color" content="#990000">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Bangers&family=Patrick+Hand&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #990000; --text: #f8fafc; }
+        
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            background: #000 url("maison hantée.jpg") no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+        }
+        
+        body { 
+            font-family: 'Patrick Hand', cursive; 
+            color: var(--text); 
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.65);
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 850px; 
+            padding: calc(20px + env(safe-area-inset-top)) 15px 140px 15px;
+            position: relative;
+        }
+
+        .main-header-art {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 20px 10px;
+            margin-bottom: 25px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .subtitle-box { font-size: clamp(28px, 8vw, 42px); color: #fff; display: block; text-shadow: 0 2px 10px #000; }
+        .main-title-gothic { font-family: 'Cinzel', serif; font-size: 14px; color: var(--primary); letter-spacing: 5px; display: block; }
+
+        .solde-header { 
+            background: rgba(0,0,0,0.85); 
+            border: 1px solid var(--primary); 
+            padding: 15px; 
+            border-radius: 16px; 
+            margin-bottom: 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+        }
+
+        .summary-grid { display: flex; gap: 10px; margin-bottom: 20px; }
+        .summary-card { 
+            flex: 1; 
+            background: rgba(15, 23, 42, 0.4); 
+            padding: 12px 8px; 
+            border-radius: 12px; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+        .summary-val { font-family: 'Bangers', cursive; font-size: clamp(22px, 6vw, 36px); }
+        
+        /* CONTENEUR SWIPE */
+        #swipe-wrapper { overflow: hidden; width: 100%; position: relative; }
+        #swipe-track { display: flex; width: 200%; transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); }
+        .view-pane { width: 50%; min-width: 50%; }
+
+        .cat-card { 
+            background: rgba(15, 23, 42, 0.4); 
+            border-radius: 20px; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            margin-bottom: 20px; 
+            overflow: hidden; 
+            backdrop-filter: blur(8px);
+        }
+
+        .cat-header { 
+            padding: 5px 15px; 
+            font-family: 'Cinzel', serif; 
+            font-size: clamp(16px, 4vw, 22px); 
+            color: var(--primary); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            border-bottom: 1px solid rgba(185, 28, 28, 0.2); 
+        }
+
+        /* ICONES DOUBLÉES ET TRANSPARENTES */
+        .gothic-icon {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+            mix-blend-mode: screen; /* Rend le fond noir transparent */
+            filter: drop-shadow(0 0 5px rgba(153, 0, 0, 0.5));
+            flex-shrink: 0;
+        }
+        
+        .item-row { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); gap: 10px; }
+        .check { width: 24px; height: 24px; border: 2px solid var(--primary); border-radius: 6px; flex-shrink: 0; }
+        .done .check { background: var(--primary); position: relative; }
+        .done .check::after { content: '✓'; color: white; position: absolute; left: 5px; top: -3px; font-size: 16px; }
+        
+        .item-label { flex: 1; font-size: clamp(17px, 4vw, 22px); }
+        .item-amt-val { font-weight: bold; color: #fff; }
+
+        input { background: rgba(0,0,0,0.7); color: #fff; border: 1px solid #444; padding: 10px; border-radius: 8px; font-size: 16px !important; }
+        
+        .btn { color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-family: 'Cinzel', serif; font-size: 13px; }
+        
+        .btn-save {
+            background: #000 url("flammes.jpg") no-repeat center center;
+            background-size: cover;
+            border: 2px solid #990000;
+            animation: burnPulse 2s infinite;
+        }
+
+        @keyframes burnPulse {
+            0% { box-shadow: 0 0 10px rgba(153, 0, 0, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(200, 0, 0, 0.9); }
+            100% { box-shadow: 0 0 10px rgba(153, 0, 0, 0.5); }
+        }
+
+        .nav-bar { position: fixed; bottom: 0; width: 100%; max-width: 850px; background: rgba(0,0,0,0.95); border-top: 2px solid var(--primary); padding: 15px 10px calc(25px + env(safe-area-inset-bottom)); display: flex; justify-content: space-around; z-index: 100; }
+        .nav-btn { background: none; border: none; color: #666; font-family: 'Bangers'; font-size: 24px; cursor: pointer; }
+        .nav-btn.active { color: var(--primary); text-shadow: 0 0 10px var(--primary); }
+
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #16a34a; color: #fff; padding: 10px 20px; border-radius: 20px; z-index: 9999; transition: transform 0.3s ease; }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+        
+        #internalSaveBox { display: none; background: rgba(10, 0, 0, 0.85); color: #fecaca; padding: 15px; border-radius: 12px; border: 2px solid #990000; margin-bottom: 20px; z-index: 2000; position: relative; backdrop-filter: blur(10px); }
+        #internalSaveBox textarea { width: 100%; height: 80px; margin: 10px 0; background: #000; color: #fca5a5; border: 1px solid #990000; padding: 8px; font-family: monospace; }
+        
+        #importModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(6px); }
+        #importModal.open { display: flex; }
+        .import-box { background: #0a0a0f; border: 2px solid #990000; border-radius: 20px; padding: 25px; width: 100%; max-width: 480px; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div id="toast">✅ Code copié !</div>
+
+        <div class="main-header-art">
+            <span class="subtitle-box">Mon budget zen</span>
+            <h1 class="main-title-gothic">SANCTUARIUM</h1>
+        </div>
+
+        <div class="solde-header">
+            <span style="font-family: 'Cinzel'; font-size: 16px;">BUTIN INITIAL</span>
+            <input type="number" id="soldeInit" step="0.01" style="width: 100px; text-align: right;" oninput="update()">
+        </div>
+
+        <div id="internalSaveBox">
+            <b>VOTRE SCEAU :</b><br>
+            <textarea id="saveCodeArea" readonly></textarea>
+            <button class="btn" style="width:100%; background: #990000;" onclick="copyCode()">📋 COPIER LE CODE</button>
+            <button class="btn" style="width:100%; background: #000; margin-top:5px;" onclick="document.getElementById('internalSaveBox').style.display='none'">FERMER</button>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button class="btn btn-save" style="flex: 1;" onclick="showInternalSave()">
+                <img src="plume.avif" style="width:20px; mix-blend-mode:screen;" alt=""> ÉCRIS AVEC TON SANG
+            </button>
+            <button class="btn" style="flex: 1; background: #334155;" onclick="openImportModal()">📂 INVOCATION</button>
+        </div>
+
+        <div class="summary-grid">
+            <div class="summary-card"><small>ORACLE</small><br><div class="summary-val" id="sPrev">0€</div></div>
+            <div class="summary-card"><small>LIBRE</small><br><div class="summary-val" id="sReel" style="color: var(--primary);">0€</div></div>
+            <div class="summary-card"><small>DIFFÉRÉ</small><br><div class="summary-val" id="sEncours" style="color:#f59e0b;">0€</div></div>
+        </div>
+
+        <div id="swipe-wrapper">
+            <div id="swipe-track">
+                <div class="view-pane" id="view-budget">
+                    <div id="catsGrid"></div>
+                </div>
+                <div class="view-pane" id="view-tx" style="padding-bottom:50px;">
+                    <div class="cat-card" style="padding:20px; background: rgba(0,0,0,0.7);">
+                        <input type="text" id="txLib" placeholder="Lieu du sacrifice..." style="width:100%; margin-bottom:10px;">
+                        <input type="number" id="txAmt" placeholder="€" style="width:100%; margin-bottom:10px;">
+                        <div style="display:flex; gap:10px; margin-bottom:14px; font-size:12px;">
+                            <label><input type="radio" name="txType" value="immédiat" checked> IMMÉDIAT</label>
+                            <label><input type="radio" name="txType" value="différé"> DIFFÉRÉ</label>
+                        </div>
+                        <button class="btn" style="width:100%; background: var(--primary);" onclick="addTx()">INSCRIRE</button>
+                    </div>
+                    <div id="txList"></div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="nav-bar">
+            <button class="nav-btn active" id="btnB" onclick="nav('budget')">DONJON</button>
+            <button class="nav-btn" id="btnT" onclick="nav('tx')">REGISTRE</button>
+        </nav>
+    </div>
+
+    <div id="importModal">
+        <div class="import-box">
+            <textarea id="importCodeArea" placeholder="Colle ton sceau..."></textarea>
+            <button class="btn" style="width:100%; background: var(--primary); margin-top:10px;" onclick="confirmImport()">🩸 INVOQUER</button>
+            <button class="btn" style="width:100%; background: #000; margin-top:5px;" onclick="closeImportModal()">ANNULER</button>
+        </div>
+    </div>
+
+<script>
+const KEY = 'sanct_gh_v3';
+const catConfig = {
+    m: { label: 'Maison', file: 'haunted_house_icon.jpg' },
+    c: { label: 'Crédits', file: 'credit_icon.jpg' },
+    v: { label: 'Transport', file: 'hearse_icon.jpg' },
+    a: { label: 'Abos', file: 'subscriptions_icon.jpg' },
+    s: { label: 'Santé', file: 'health_icon.jpg' },
+    o: { label: 'Autres', file: 'other_icon.jpg' }
+};
+
+let store = JSON.parse(localStorage.getItem(KEY)) || {
+    solde: 3000, transactions: [],
+    cats: [{id:'m', label:'Maison', items:[]},{id:'c', label:'Crédits', items:[]},{id:'v', label:'Transport', items:[]},{id:'a', label:'Abos', items:[]},{id:'s', label:'Santé', items:[]},{id:'o', label:'Autres', items:[]}]
+};
+
+// --- LOGIQUE SWIPE ---
+let touchStart = 0;
+let currentView = 'budget';
+const wrapper = document.getElementById('swipe-wrapper');
+
+wrapper.addEventListener('touchstart', e => touchStart = e.touches[0].clientX, {passive: true});
+wrapper.addEventListener('touchend', e => {
+    let touchEnd = e.changedTouches[0].clientX;
+    if (touchStart - touchEnd > 80) nav('tx');
+    if (touchStart - touchEnd < -80) nav('budget');
+});
+
+function nav(v) {
+    currentView = v;
+    const track = document.getElementById('swipe-track');
+    track.style.transform = v === 'budget' ? 'translateX(0%)' : 'translateX(-50%)';
+    document.getElementById('btnB').classList.toggle('active', v === 'budget');
+    document.getElementById('btnT').classList.toggle('active', v === 'tx');
+    window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function save() { localStorage.setItem(KEY, JSON.stringify(store)); }
+
+function update() {
+    store.solde = parseFloat(document.getElementById('soldeInit').value) || 0;
+    save();
+    let tF = 0, tP = 0;
+    store.cats.forEach(c => {
+        let ct = 0;
+        c.items.forEach(it => { tF += it.amt; ct += it.amt; if(it.done) tP += it.amt; });
+        const e = document.getElementById('ct-'+c.id); if(e) e.textContent = ct.toFixed(0)+'€';
+    });
+    const tCB = store.transactions.filter(t => t.type !== 'différé').reduce((s,t) => s + t.amt, 0);
+    const tDiff = store.transactions.filter(t => t.type === 'différé').reduce((s,t) => s + t.amt, 0);
+    document.getElementById('sPrev').textContent = (store.solde - tF).toFixed(0) + '€';
+    document.getElementById('sReel').textContent = (store.solde - tP - tCB).toFixed(2) + '€';
+    document.getElementById('sEncours').textContent = tDiff.toFixed(2) + '€';
+}
+
+function render() {
+    const grid = document.getElementById('catsGrid'); grid.innerHTML = '';
+    store.cats.forEach(cat => {
+        const config = catConfig[cat.id];
+        const div = document.createElement('div'); div.className = 'cat-card';
+        div.innerHTML = `
+            <div class="cat-header">
+                <span style="display:flex;align-items:center;gap:10px;">
+                    <img src="${config.file}" class="gothic-icon">
+                    ${config.label}
+                </span>
+                <span id="ct-${cat.id}"></span>
+            </div>
+            <div id="list-${cat.id}">
+            ${cat.items.map((it, i) => `
+                <div class="item-row ${it.done ? 'done' : ''}" onclick="toggle('${cat.id}', ${i})">
+                    <div class="check"></div>
+                    <span class="item-label">${it.l}</span>
+                    <span class="item-amt-val">${it.amt}€</span>
+                    <button style="background:none; border:none; color:#777; font-size:26px; padding-left:15px;" onclick="event.stopPropagation(); del('${cat.id}', ${i})">×</button>
+                </div>`).join('')}
+            </div>
+            <div style="display:flex; gap:10px; padding:15px; background:rgba(0,0,0,0.3);">
+                <input type="text" id="nl-${cat.id}" placeholder="Nom" style="flex:2; min-width:0;">
+                <input type="number" id="na-${cat.id}" placeholder="€" style="flex:1; min-width:0;">
+                <button class="btn" style="background: var(--primary);" onclick="add('${cat.id}')">+</button>
+            </div>`;
+        grid.appendChild(div);
+    });
+}
+
+function toggle(cId, i) { 
+    let cat = store.cats.find(c=>c.id===cId);
+    cat.items[i].done = !cat.items[i].done; 
+    render(); update(); 
+}
+
+function add(cId) { 
+    const l = document.getElementById('nl-'+cId), a = document.getElementById('na-'+cId);
+    if(l.value && a.value) { 
+        store.cats.find(c=>c.id===cId).items.push({l:l.value, amt:parseFloat(a.value), done:false}); 
+        l.value=''; a.value=''; render(); update(); 
+    }
+}
+
+function del(cId, i) { 
+    if(confirm("Supprimer ?")) { 
+        store.cats.find(c=>c.id===cId).items.splice(i,1); 
+        render(); update(); 
+    } 
+}
+
+function addTx() {
+    const l = document.getElementById('txLib'), a = document.getElementById('txAmt');
+    const type = document.querySelector('input[name="txType"]:checked').value;
+    if(l.value && a.value) { 
+        store.transactions.unshift({lib:l.value, amt:parseFloat(a.value), type:type}); 
+        l.value=''; a.value=''; renderTx(); update(); 
+    }
+}
+
+function renderTx() {
+    document.getElementById('txList').innerHTML = store.transactions.map(t => `
+        <div style="display:flex; justify-content:space-between; padding:12px 15px; border-bottom:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.4);">
+            <div style="display:flex; flex-direction:column;">
+                <span>${t.lib}</span>
+                <small style="color:${t.type==='différé'?'#f59e0b':'#86efac'}">${t.type.toUpperCase()}</small>
+            </div>
+            <span style="color:var(--primary); font-weight:bold;">-${t.amt.toFixed(2)}€</span>
+        </div>`).join('');
+}
+
+function showInternalSave() {
+    save();
+    const code = btoa(unescape(encodeURIComponent(JSON.stringify(store))));
+    document.getElementById('saveCodeArea').value = code;
+    document.getElementById('internalSaveBox').style.display = 'block';
+}
+
+function copyCode() {
+    const area = document.getElementById('saveCodeArea');
+    area.select(); document.execCommand('copy');
+    showToast('✅ Code copié !');
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function openImportModal() { document.getElementById('importModal').classList.add('open'); }
+function closeImportModal() { document.getElementById('importModal').classList.remove('open'); }
+function confirmImport() {
+    const c = document.getElementById('importCodeArea').value.trim();
+    try {
+        store = JSON.parse(decodeURIComponent(escape(atob(c))));
+        save(); render(); renderTx(); update(); closeImportModal();
+        showToast('✅ Sceau invoqué !');
+    } catch(e) { showToast('❌ Code invalide'); }
+}
+
+document.getElementById('soldeInit').value = store.solde;
+render(); renderTx(); update();
+</script>
+</body>
+</html>
